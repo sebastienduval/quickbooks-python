@@ -93,15 +93,14 @@ class QuickBooks():
             self.verbose = False
 
         self._BUSINESS_OBJECTS = [
-
             "Account","Attachable","Bill","BillPayment",
             "Class","CompanyInfo","CreditMemo","Customer",
             "Department","Employee","Estimate","Invoice",
             "Item","JournalEntry","Payment","PaymentMethod",
             "Preferences","Purchase","PurchaseOrder",
-            "SalesReceipt","TaxCode","TaxRate","Term",
-            "TimeActivity","Vendor","VendorCredit"
-
+            "SalesReceipt","TaxAgency","TaxCode","TaxRate",
+            "TaxService","Term","TimeActivity","Vendor",
+            "VendorCredit"
         ]
 
     @property
@@ -251,8 +250,6 @@ class QuickBooks():
             raise Exception("{} is not a valid QBO Business Object." % qbbo,
                             " (Note that this validation is case sensitive.)")
 
-        # url = "https://qb.sbfinance.intuit.com/v3/company/{0}/{1}".format(
-        #       self.company_id, qbbo.lower())
         url = self.api_url + "/company/{0}/{1}".format(self.company_id, qbbo.lower())
 
         if self.verbose:
