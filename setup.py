@@ -18,7 +18,7 @@ setup(
         'rauth',
         'simplejson',
         'python-dateutil',
-		'pytz'
+        'pytz'
     ],
 
     packages=find_packages(),
