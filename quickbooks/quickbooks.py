@@ -168,14 +168,10 @@ class QuickBooks():
             raise Exception("Need four creds for Quickbooks.create_session.")
         return self.session
 
-    def query_fetch_more(self, r_type, header_auth, realm, qb_object, 
-        original_payload =''):
+    def query_fetch_more(self, r_type, header_auth, realm, qb_object, original_payload ='', max_results=500):
         """ Wrapper script around keep_trying to fetch more results if 
         there are more. """
 
-        # 500 is the maximum number of results returned by QB
-
-        max_results = 500
         start_position = 0
         more = True
         data_set = []
@@ -212,12 +208,12 @@ class QuickBooks():
             # measuring
             try:
                 result_count = int(r_dict['QueryResponse']['totalCount']) 
-                if result_count < max_results:
+                if result_count <= max_results:
                     more = False
             except KeyError:
                 try:
                     result_count = len(r_dict['QueryResponse'][qb_object]) 
-                    if result_count < max_results:
+                    if result_count <= max_results:
                         more = False
                 except KeyError:
                     print("\n\n ERROR", r_dict)
@@ -254,7 +250,7 @@ class QuickBooks():
 
         if self.verbose:
 
-            print("About to create a %s object with this request_body:".format(\
+            print("About to create a {0} object with this request_body:".format(\
                 qbbo))
             print(request_body)
 
@@ -268,7 +264,7 @@ class QuickBooks():
         if not hasattr(self,attr_name):
 
             if self.verbose:
-                print("Creating a %ss attribute for this\
+                print("Creating a {0}s attribute for this\
                     session.".format(qbbo))
 
             setattr(self, attr_name, {new_Id:new_object})
@@ -276,7 +272,7 @@ class QuickBooks():
         else:
 
             if self.verbose:
-                print("Adding this new %s to the existing set of them.".format(
+                print("Adding this new {0} to the existing set of them.".format(
                     qbbo))
                 print(json.dumps(new_object, indent=4))
 
@@ -401,13 +397,20 @@ class QuickBooks():
         else:
             return {}
 
-    def query_objects(self, business_object, fields='*', params={}, query_tail = ""):
+    def query_single_object(self, business_object, fields='*', params={}, query_tail = ""):
+        """ Runs a query-type request, just like query_objects, but only returns a single object. """
+        results = self.query_objects(business_object, fields, params, query_tail, max_results=1)
+        if results is not None and len(results) >= 1:
+            return results[0]
+        return None
+
+    def query_objects(self, business_object, fields='*', params={}, query_tail = "", max_results=500):
         """
         Runs a query-type request against the QBOv3 API
         Gives you the option to create an AND-joined query by parameter
             or just pass in a whole query tail
         The parameter dicts should be keyed by parameter name and
-            have twp-item tuples for values, which are operator and criterion
+            have two-item tuples for values, which are operator and criterion
         """
 
         if business_object not in self._BUSINESS_OBJECTS:
@@ -422,25 +425,27 @@ class QuickBooks():
 
         if query_tail == "" and not params == {}:
 
-            #It's not entirely obvious what are valid properties for
-            #filtering, so we'll collect the working ones here and
-            #validate the properties before sending it
-            #datatypes are defined here:
-            #https://developer.intuit.com/docs/0025_quickbooksapi/
-            #    0050_data_services/020_key_concepts/0700_other_topics
-
-            props = {
-                "TxnDate":"Date",
-                "MetaData.CreateTime":"DateTime",      #takes a Date though
-                "MetaData.LastUpdatedTime":"DateTime", #ditto
-                "DocNumber":"Integer"
-            }
+            # #It's not entirely obvious what are valid properties for
+            # #filtering, so we'll collect the working ones here and
+            # #validate the properties before sending it
+            # #datatypes are defined here:
+            # #https://developer.intuit.com/docs/0025_quickbooksapi/
+            # #    0050_data_services/020_key_concepts/0700_other_topics
+            #
+            # props = {
+            #     "TxnDate":"Date",
+            #     "MetaData.CreateTime":"DateTime",      #takes a Date though
+            #     "MetaData.LastUpdatedTime":"DateTime", #ditto
+            #     "DocNumber":"Integer",
+            #     "DisplayName":"String",
+            #     "Name":"String"
+            # }
 
             p = params.keys()
 
-            #only validating the property name for now, not the DataType
-            if p[0] not in props:
-                raise Exception("Unfamiliar property: {0}".format(p[0]))
+            # #only validating the property name for now, not the DataType
+            # if p[0] not in props:
+            #     raise Exception("Unfamiliar property: {0}".format(p[0]))
 
             query_string+=" WHERE {0} {1} {2}".format(p[0], params[p[0]][0], params[p[0]][1])
 
@@ -467,7 +472,8 @@ class QuickBooks():
                                         header_auth=True,
                                         realm=self.company_id,
                                         qb_object=business_object,
-                                        original_payload=query_string)
+                                        original_payload=query_string,
+                                        max_results=max_results)
 
         return results
 
