@@ -324,6 +324,10 @@ class SalesReceiptRequestBuilder(BaseBuilder):
         self.request['PaymentType'] = value
         return self
 
+    def payment_method_ref(self, payment_method_ref_builder):
+        self.request['PaymentMethodRef'] = payment_method_ref_builder.request
+        return self
+
     def payment_ref_number(self, value):
         self.sanitize_length('PaymentRefNum', value, 21)
         self.request['PaymentRefNum'] = value
@@ -618,6 +622,10 @@ class AccountRefBuilder(RefBuilder):
 
 
 class TaxCodeRefBuilder(RefBuilder):
+    def __init__(self):
+        RefBuilder.__init__(self)
+
+class PaymentMethodRefBuilder(RefBuilder):
     def __init__(self):
         RefBuilder.__init__(self)
 #endregion
