@@ -472,6 +472,7 @@ class LineBuilder(BaseBuilder):
         self.request['LinkedTxn'].append(linked_transaction_builder.request)
         return self
 
+		
 class InvoiceLineBuilder(LineBuilder):
     def __init__(self):
         LineBuilder.__init__(self)
