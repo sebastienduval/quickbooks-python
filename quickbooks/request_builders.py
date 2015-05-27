@@ -353,6 +353,10 @@ class SalesReceiptRequestBuilder(BaseBuilder):
         self.request['TotalAmt'] = value
         return self
 
+    def exchange_rate(self, value):
+        self.request['ExchangeRate'] = value
+        return self
+
 
 class TransactionTaxDetailBuilder(BaseBuilder):
     def __init__(self):
